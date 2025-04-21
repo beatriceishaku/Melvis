@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -29,9 +28,8 @@ export function Layout({ children }: LayoutProps) {
 
   const navItems = [
     { name: "Home", path: "/home" },
-    { name: "Chat", path: "/chat" },
     { name: "Meditation", path: "/meditation" },
-    { name: "Self Assessment", path: "/assessment" },
+    { name: "Assess Yourself", path: "/assessment" },
   ];
 
   const isActive = (path: string) => {
@@ -92,27 +90,27 @@ export function Layout({ children }: LayoutProps) {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="sticky top-0 z-50 w-full border-b bg-blue-100 shadow-sm">
+      <header className="sticky top-0 z-50 w-full border-b bg-blue-700 shadow-sm">
         <div className="container flex h-16 items-center justify-between">
           <div className="flex items-center gap-2">
-            <Link to="/home" className="text-2xl font-bold text-blue-700">
-              MindfulMe
+            <Link to="/home" className="text-2xl font-bold text-white">
+              Hopetherapy
             </Link>
           </div>
           <div className="flex items-center gap-4">
             {isMobile ? <MobileNavigation /> : <DesktopNavigation />}
             {!isMobile && (
-              <Button variant="outline" asChild>
+              <Button variant="outline" asChild className="border-white text-white hover:bg-blue-800 hover:text-white">
                 <Link to="/login">Logout</Link>
               </Button>
             )}
           </div>
         </div>
       </header>
-      <main className="flex-1 container py-6">{children}</main>
-      <footer className="border-t bg-blue-100 py-6">
-        <div className="container flex flex-col items-center gap-2 text-center text-sm text-blue-500">
-          <p>© {new Date().getFullYear()} MindfulMe. All rights reserved.</p>
+      <main className="flex-1 container py-6 bg-blue-50 w-full">{children}</main>
+      <footer className="border-t bg-blue-700 py-6">
+        <div className="container flex flex-col items-center gap-2 text-center text-sm text-blue-100">
+          <p>© {new Date().getFullYear()} Hopetherapy. All rights reserved.</p>
           <p>Taking care of your mental health, one step at a time.</p>
         </div>
       </footer>
