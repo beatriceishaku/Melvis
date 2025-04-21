@@ -1,10 +1,11 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Send } from "lucide-react";
+import { GeminiApiKeyInput, getGeminiApiKey } from "@/components/GeminiApiKeyInput";
+import { toast } from "@/components/ui/sonner";
 
 interface Message {
   id: string;
@@ -28,7 +29,6 @@ const INITIAL_MESSAGES: Message[] = [
   },
 ];
 
-// Sample YouTube video recommendations
 const YOUTUBE_VIDEOS: Record<string, YouTubeVideo[]> = {
   anxiety: [
     {
@@ -92,7 +92,6 @@ const YOUTUBE_VIDEOS: Record<string, YouTubeVideo[]> = {
   ],
 };
 
-// Simple responses for the chatbot
 const CHATBOT_RESPONSES: Record<string, string[]> = {
   greeting: [
     "Hello! How are you feeling today?",
@@ -134,6 +133,7 @@ const Chat = () => {
   const [showVideos, setShowVideos] = useState(false);
   const [recommendedVideos, setRecommendedVideos] = useState<YouTubeVideo[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     scrollToBottom();
@@ -186,10 +186,36 @@ const Chat = () => {
     }
   };
 
-  const handleSendMessage = () => {
+  const fetchGeminiResponse = async (userPrompt: string): Promise<string | null> => {
+    const apiKey = getGeminiApiKey();
+    if (!apiKey) {
+      return null;
+    }
+    try {
+      const res = await fetch("https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=" + apiKey, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{ text: userPrompt }]
+          }]
+        }),
+      });
+      if (!res.ok) {
+        return `Error: Gemini API returned ${res.status}`;
+      }
+      const data = await res.json();
+      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || data?.candidates?.[0]?.content?.text;
+      if (!text) return "Sorry, no response was generated.";
+      return text;
+    } catch (error: any) {
+      return "Sorry, there was an error connecting to the Gemini API.";
+    }
+  };
+
+  const handleSendMessage = async () => {
     if (inputValue.trim() === "") return;
 
-    // User message
     const userMessage: Message = {
       id: Date.now().toString(),
       text: inputValue,
@@ -199,15 +225,14 @@ const Chat = () => {
 
     setMessages((prev) => [...prev, userMessage]);
     setInputValue("");
+    setIsLoading(true);
 
-    // Check for video request
     const lowercaseInput = inputValue.toLowerCase();
     if (lowercaseInput.includes("video") || lowercaseInput.includes("videos")) {
       const videos = getRecommendedVideos(lowercaseInput);
       setRecommendedVideos(videos);
       setShowVideos(true);
-      
-      // Bot response about videos
+
       setTimeout(() => {
         const botVideoResponse: Message = {
           id: Date.now().toString() + "-bot",
@@ -223,20 +248,50 @@ const Chat = () => {
           timestamp: new Date(),
         };
         setMessages((prev) => [...prev, botVideoResponse]);
+        setIsLoading(false);
       }, 1000);
     } else {
       setShowVideos(false);
-      
-      // Normal bot response
-      setTimeout(() => {
-        const botResponse: Message = {
-          id: Date.now().toString() + "-bot",
-          text: getChatbotResponse(inputValue),
-          sender: "bot",
-          timestamp: new Date(),
-        };
-        setMessages((prev) => [...prev, botResponse]);
-      }, 1000);
+
+      const apiKey = getGeminiApiKey();
+      if (apiKey) {
+        try {
+          const responseText = await fetchGeminiResponse(inputValue);
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: Date.now().toString() + "-bot",
+              text: responseText || "Sorry, Gemini didn't respond.",
+              sender: "bot",
+              timestamp: new Date(),
+            },
+          ]);
+        } catch (err: any) {
+          toast.error("Error getting AI response: " + (err?.message || "unknown error"));
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: Date.now().toString() + "-bot",
+              text: "Sorry, there was an error getting a response from Gemini.",
+              sender: "bot",
+              timestamp: new Date(),
+            },
+          ]);
+        }
+        setIsLoading(false);
+      } else {
+        setTimeout(() => {
+          const botResponse: Message = {
+            id: Date.now().toString() + "-bot",
+            text: getChatbotResponse(inputValue),
+            sender: "bot",
+            timestamp: new Date(),
+          };
+          setMessages((prev) => [...prev, botResponse]);
+          toast("Set your Gemini API key above to use AI-generated answers!");
+          setIsLoading(false);
+        }, 1000);
+      }
     }
   };
 
@@ -253,7 +308,7 @@ const Chat = () => {
             Share how you're feeling or ask for advice. Type "videos" along with your topic to get video recommendations.
           </p>
         </div>
-        
+        <GeminiApiKeyInput />
         <Card className="flex-1 flex flex-col">
           <CardHeader>
             <CardTitle className="text-blue-700">Your Conversation</CardTitle>
@@ -323,12 +378,13 @@ const Chat = () => {
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") handleSendMessage();
+                  if (e.key === "Enter" && !isLoading) handleSendMessage();
                 }}
-                placeholder="Type your message..."
+                placeholder={isLoading ? "Waiting for Gemini..." : "Type your message..."}
                 className="flex-1"
+                disabled={isLoading}
               />
-              <Button onClick={handleSendMessage} size="icon">
+              <Button onClick={handleSendMessage} size="icon" disabled={isLoading}>
                 <Send className="h-4 w-4" />
               </Button>
             </div>
