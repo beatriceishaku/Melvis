@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -61,10 +60,8 @@ const Chat = () => {
     }
 
     try {
-      const apiKey = getGeminiApiKey();
       const response = await fetchGeminiResponse({
         prompt: newMsg.content,
-        apiKey,
       });
       botMessage = { sender: "bot", content: response };
       setMessages((prev) => [...prev, botMessage]);
@@ -72,7 +69,7 @@ const Chat = () => {
       toast({
         variant: "destructive",
         title: "Chatbot error",
-        description: err.message || "Something went wrong. Please check your Gemini API key.",
+        description: err.message || "Something went wrong. Please try again.",
       });
     } finally {
       setLoading(false);
