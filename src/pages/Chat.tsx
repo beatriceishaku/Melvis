@@ -1,10 +1,10 @@
+
 import React, { useState, useRef } from "react";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { fetchGeminiResponse } from "@/utils/geminiApi";
 import { YouTubeRecommendation } from "@/components/YouTubeRecommendation";
-import { getGeminiApiKey } from "@/components/GeminiApiKeyInput";
 import { toast } from "@/components/ui/use-toast";
 
 const YOUTUBE_VIDEOS = [
