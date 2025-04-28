@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -8,7 +7,12 @@ const Landing = () => {
     <div className="min-h-screen flex flex-col bg-blue-50">
       <div className="container mx-auto px-4 py-8 flex flex-col flex-1">
         <header className="flex justify-between items-center py-4">
-          <h1 className="text-2xl font-bold text-blue-800">Hopetherapy</h1>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-blue-700 rounded-lg flex items-center justify-center">
+              <span className="text-xl font-bold text-white">M</span>
+            </div>
+            <h1 className="text-2xl font-bold text-blue-800">Melvis</h1>
+          </div>
           <div className="flex gap-4">
             <Button asChild variant="outline" className="text-blue-800 border-blue-700">
               <Link to="/login">Login</Link>
@@ -38,7 +42,7 @@ const Landing = () => {
 
       <footer className="bg-blue-700 py-6">
         <div className="container mx-auto px-4 text-center text-blue-100">
-          <p>© {new Date().getFullYear()} Hopetherapy. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Melvis. All rights reserved.</p>
           <p className="mt-2">Taking care of your mental health, one step at a time.</p>
         </div>
       </footer>

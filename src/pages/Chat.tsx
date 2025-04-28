@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -83,7 +82,7 @@ const Chat = () => {
   return (
     <Layout>
       <div className="max-w-2xl mx-auto w-full bg-blue-50 min-h-[60vh] rounded-2xl shadow-md p-4 md:p-8 mt-4 flex flex-col">
-        <h2 className="text-2xl md:text-3xl font-bold text-blue-800 mb-2">Hopetherapy AI Chat</h2>
+        <h2 className="text-2xl md:text-3xl font-bold text-blue-800">Melvis AI Chat</h2>
         <div className="flex-1 overflow-auto space-y-4 pb-4">
           {messages.map((msg, i) => (
             <div key={i} className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}>

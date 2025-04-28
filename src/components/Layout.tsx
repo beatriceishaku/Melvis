@@ -92,9 +92,12 @@ export function Layout({ children }: LayoutProps) {
     <div className="min-h-screen flex flex-col">
       <header className="sticky top-0 z-50 w-full border-b bg-blue-700 shadow-sm">
         <div className="container flex h-16 items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
+              <span className="text-xl font-bold text-white">M</span>
+            </div>
             <Link to="/home" className="text-2xl font-bold text-white">
-              Hopetherapy
+              Melvis
             </Link>
           </div>
           <div className="flex items-center gap-4">
