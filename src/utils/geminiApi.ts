@@ -9,8 +9,9 @@ export async function fetchGeminiResponse({
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ prompt }),
   });
-  
-  if (!response.ok) throw new Error("Failed to get a response from the chat API");
+}
+  if (!response.ok) throw new Error("Failed to get a response from the chat API");{
   const data = await response.json();
   return data.response || "Sorry, I couldn't quite get that. Try again?";
+  
 }
