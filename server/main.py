@@ -62,3 +62,6 @@ def login():
     return {"User logggeed in"}
 
     
+
+    #TODO 1: write the logic for login and signup
+    #TODO 2: Use JWT for auth
