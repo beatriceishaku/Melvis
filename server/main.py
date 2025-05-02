@@ -24,6 +24,11 @@ class PromptRequest(BaseModel):
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 GEMINI_ENDPOINT = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
 
+@app.get("/")
+def index():
+    return {"Welcome to Melvis"}
+
+
 @app.post("/api/chat")
 def chat(request: PromptRequest):
     if not GEMINI_API_KEY:
@@ -44,3 +49,16 @@ def chat(request: PromptRequest):
         return {"response": text or "No response from Gemini model"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/signup")
+def create_user():
+    #Going to write logic later
+    return {"user created succesfully"}
+    
+
+@app.post("/login")
+def login():
+    return {"User logggeed in"}
+
+    
