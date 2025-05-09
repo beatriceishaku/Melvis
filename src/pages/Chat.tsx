@@ -2,7 +2,7 @@ import React, { useState, useRef } from "react";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { fetchGeminiResponse } from "@/utils/geminiApi";
+import { fetchGeminiResponse } from "@/utils/api";
 import { YouTubeRecommendation } from "@/components/YouTubeRecommendation";
 import { toast } from "@/components/ui/use-toast";
 
