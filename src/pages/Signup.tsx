@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -6,19 +5,19 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/use-toast";
+import axios from "axios";
 
 const Signup = () => {
-  const [name, setName] = useState("");
+  const [fullname, setFullname] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Simple validation
+
     if (password !== confirmPassword) {
       toast({
         variant: "destructive",
@@ -29,24 +28,32 @@ const Signup = () => {
     }
 
     setIsLoading(true);
-    
-    // For demo purposes - in a real app you'd connect to your auth backend
-    setTimeout(() => {
+
+    try {
+      const response = await axios.post("http://127.0.0.1:8000/api/signup", {
+        fullname,
+        email,
+        password,
+      });
+
+      const { token, message } = response.data;
+
+      toast({
+        title: "Account created!",
+        description: message || "Welcome to MindfulMe.",
+      });
+
+      localStorage.setItem("token", token);
+      navigate("/home");
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Signup failed",
+        description: error.response?.data?.detail || "An error occurred while creating your account.",
+      });
+    } finally {
       setIsLoading(false);
-      if (name && email && password) {
-        toast({
-          title: "Account created!",
-          description: "Welcome to MindfulMe.",
-        });
-        navigate("/home");
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Signup failed",
-          description: "Please fill all required fields.",
-        });
-      }
-    }, 1000);
+    }
   };
 
   return (
@@ -68,8 +75,8 @@ const Signup = () => {
                 <Input
                   id="name"
                   placeholder="John Doe"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  value={fullname}
+                  onChange={(e) => setFullname(e.target.value)}
                   required
                 />
               </div>

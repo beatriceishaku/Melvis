@@ -1,11 +1,18 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/use-toast";
+import { login } from "../utils/api"; // Make sure it's a named export or adjust accordingly
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -13,27 +20,27 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
-    // For demo purposes - in a real app you'd connect to your auth backend
-    setTimeout(() => {
+
+    try {
+      const data = await login({ email, password });
+      toast({
+        title: "Login successful!",
+        description: `Welcome back, ${data?.user?.email || "user"}!`,
+      });
+      navigate("/home");
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Login failed",
+        description: "Please check your credentials and try again.",
+      });
+      console.error("Login error:", error);
+    } finally {
       setIsLoading(false);
-      if (email && password) {
-        toast({
-          title: "Login successful!",
-          description: "Welcome back to MindfulMe.",
-        });
-        navigate("/home");
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Login failed",
-          description: "Please check your credentials and try again.",
-        });
-      }
-    }, 1000);
+    }
   };
 
   return (
@@ -44,7 +51,7 @@ const Login = () => {
             Welcome Back
           </CardTitle>
           <CardDescription className="text-center">
-            Enter your email and password to access your account
+            Enter your username and password to access your account
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -54,8 +61,8 @@ const Login = () => {
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
-                  placeholder="name@example.com"
-                  type="email"
+                  placeholder="email"
+                  type="text"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
