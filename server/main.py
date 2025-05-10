@@ -23,6 +23,8 @@ JWT_ALGORITHM = "HS256"
 JWT_EXPIRATION_DELTA = timedelta(minutes=30)
 
 
+
+
 DB_FILE = "melvis.db"
 
 def init_db():
@@ -169,6 +171,14 @@ def get_current_user(token:str = Depends(lambda request: request.cookies.get("ac
 
 
 
+@app.get("/get-users")
+def get_users():
+    pass 
+
+
+
+
+    
 
 
 
