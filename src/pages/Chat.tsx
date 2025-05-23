@@ -1,10 +1,12 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { fetchGeminiResponse } from "@/utils/api";
 import { YouTubeRecommendation } from "@/components/YouTubeRecommendation";
 import { toast } from "@/components/ui/use-toast";
+import { useSpeechToText } from "@/hooks/useSpeechToText";
+import { Mic, MicOff, Square } from "lucide-react";
 
 const YOUTUBE_VIDEOS = [
   {
@@ -37,6 +39,23 @@ const Chat = () => {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  
+  const {
+    isRecording,
+    isProcessing,
+    transcript,
+    startRecording,
+    stopRecording,
+    clearTranscript,
+  } = useSpeechToText();
+
+  // Update input when transcript changes
+  useEffect(() => {
+    if (transcript) {
+      setInput(transcript);
+      clearTranscript();
+    }
+  }, [transcript, clearTranscript]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,6 +94,14 @@ const Chat = () => {
     }
   };
 
+  const handleMicClick = () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  };
+
   React.useEffect(() => {
     if (inputRef.current) inputRef.current.focus();
   }, []);
@@ -105,22 +132,45 @@ const Chat = () => {
               </div>
             </div>
           )}
+          {isProcessing && (
+            <div className="flex justify-start">
+              <div className="rounded-xl px-4 py-2 max-w-[80%] bg-blue-200 text-blue-800 animate-pulse">
+                Processing speech...
+              </div>
+            </div>
+          )}
         </div>
         <form onSubmit={handleSubmit} className="mt-4 flex gap-2">
           <Input
             ref={inputRef}
             className="bg-white/80 border-blue-200 flex-1"
-            placeholder="Type your message..."
+            placeholder="Type your message or use the microphone..."
             value={input}
             onChange={e => setInput(e.target.value)}
-            disabled={loading}
+            disabled={loading || isRecording || isProcessing}
           />
-          <Button type="submit" disabled={loading || !input.trim()} className="bg-blue-700 hover:bg-blue-800 text-white">
+          <Button
+            type="button"
+            onClick={handleMicClick}
+            disabled={loading || isProcessing}
+            className={`${
+              isRecording 
+                ? "bg-red-600 hover:bg-red-700" 
+                : "bg-blue-600 hover:bg-blue-700"
+            } text-white`}
+          >
+            {isRecording ? <Square className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+          </Button>
+          <Button type="submit" disabled={loading || !input.trim() || isRecording || isProcessing} className="bg-blue-700 hover:bg-blue-800 text-white">
             Send
           </Button>
         </form>
-        <div className="text-xs text-blue-600 mt-1">
-          Powered by Google Gemini&nbsp;|&nbsp;Type "video" for recommendations
+        <div className="text-xs text-blue-600 mt-1 flex justify-between">
+          <span>Powered by Google Gemini&nbsp;|&nbsp;Type "video" for recommendations</span>
+          <span>
+            {isRecording && "🎤 Recording..."}
+            {isProcessing && "⏳ Processing..."}
+          </span>
         </div>
       </div>
     </Layout>
