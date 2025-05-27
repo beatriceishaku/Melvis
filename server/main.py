@@ -2,7 +2,8 @@ from fastapi import FastAPI, Request, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import os
-import requests
+import requests 
+# beatrice is a big donkeyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy
 from dotenv import load_dotenv
 import sqlite3
 from passlib.context import CryptContext
