@@ -1,53 +1,22 @@
+
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import React from "react";
-import { motion } from "framer-motion";
-import heroImg from "@/assets/hero.png";
-
-const cardData = [
-  {
-    title: "Chat with Melvis",
-    description:
-      "Talk about your feelings, get advice, or simply have a comforting conversation with our supportive AI.",
-    link: "/chat",
-    buttonText: "Start Chatting",
-  },
-  {
-    title: "Morning Meditation",
-    description:
-      "Start your day with peaceful guided meditation sessions to center your mind and reduce anxiety.",
-    link: "/meditation",
-    buttonText: "Begin Meditation",
-    outline: true,
-  },
-  {
-    title: "Self Assessment",
-    description:
-      "Take our mental wellness assessment to get personalized insights about your current state.",
-    link: "/assessment",
-    buttonText: "Take Assessment",
-    outline: true,
-  },
-];
-
-
-
 
 const Home = () => {
   return (
     <Layout>
       <div className="space-y-8">
         <div className="text-center space-y-2">
-          <h1 className="text-3xl md:text-4xl font-bold text-blue-800">Hi i'm Melvis</h1>
+          <h1 className="text-3xl md:text-4xl font-bold text-blue-800">Welcome to MindfulMe</h1>
           <p className="text-xl text-blue-600">Your personal mental wellness companion</p>
         </div>
         
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           <Card className="bg-blue-50 border-blue-200 hover:shadow-lg transition-shadow">
             <CardHeader>
-              <CardTitle className="text-blue-700">Chat with Melvis </CardTitle>
+              <CardTitle className="text-blue-700">Chat with MindfulMe AI</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-blue-600">
