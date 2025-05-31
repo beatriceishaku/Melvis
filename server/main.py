@@ -2,12 +2,13 @@ from fastapi import FastAPI, Request, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import os
-import requests
+import requests 
 from dotenv import load_dotenv
 import sqlite3
 from passlib.context import CryptContext
 import jwt
 from datetime import datetime, timedelta
+# in server/main.py
 
 load_dotenv() 
 
@@ -86,6 +87,11 @@ GEMINI_ENDPOINT = f"https://generativelanguage.googleapis.com/v1beta/models/gemi
 def index():
     return {"Welcome to Melvis"}
 
+#def chat(request: PromptRequest):
+    #response = get_response(request.prompt)#
+   # if not response:
+        #raise HTTPException(status_code=404, detail="No matching intent found")
+   # return {"response": response}
 
 @app.post("/api/chat")
 def chat(request: PromptRequest):
