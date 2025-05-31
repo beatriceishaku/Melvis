@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import os
@@ -145,7 +145,7 @@ def login(request: LoginRequest):
     if user is None:
             raise HTTPException(status_code=404, detail="Invalid Credentials ")
 
-    user_id, fullname, email, password = user
+    user_id, email, password = user
 
     if not pwd_context.verify(request.password, password):
             raise HTTPException(status_code=404, detail="Invalid Credentials ")
