@@ -8,6 +8,8 @@ import { YouTubeRecommendation } from "@/components/YouTubeRecommendation";
 import { toast } from "@/components/ui/use-toast";
 import { useSpeechToText } from "@/hooks/useSpeechToText";
 import { Mic, MicOff, Square, Send, Sparkles } from "lucide-react";
+import { detectIntent } from "@/utils/intents";
+import { IntentChips } from "@/components/IntentChips";
 
 const YOUTUBE_VIDEOS = [
   {
@@ -28,10 +30,12 @@ export interface ChatMessage {
   sender: "user" | "bot";
   content: string;
   videos?: typeof YOUTUBE_VIDEOS;
+  intentName?: string;
 }
 
-const containsVideoTrigger = (text: string) =>
-  /\bvideo(s)?\b/i.test(text);
+// Remove this function as we'll use intents instead
+// const containsVideoTrigger = (text: string) =>
+//  /\bvideo(s)?\b/i.test(text);
 
 const Chat = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -76,24 +80,28 @@ const Chat = () => {
     setInput("");
     setLoading(true);
 
-    let botMessage: ChatMessage;
-    if (containsVideoTrigger(newMsg.content)) {
-      botMessage = {
-        sender: "bot",
-        content: "Sure, here are some videos you might find helpful.",
-        videos: YOUTUBE_VIDEOS,
-      };
-      setMessages((prev) => [...prev, botMessage]);
-      setLoading(false);
-      return;
-    }
-
     try {
-      const response = await fetchGeminiResponse({
-        prompt: newMsg.content,
-      });
-      botMessage = { sender: "bot", content: response };
-      setMessages((prev) => [...prev, botMessage]);
+      // First, try to detect intent from the user message
+      const intentResponse = await detectIntent(newMsg.content);
+      
+      if (intentResponse) {
+        // If an intent was detected, use its response
+        setMessages((prev) => [...prev, intentResponse]);
+      } else {
+        // If no intent was detected, use Gemini API for a fallback response
+        const previousMessages = messages.map(msg => ({
+          role: msg.sender === "user" ? "user" : "assistant",
+          content: msg.content
+        }));
+        
+        const response = await fetchGeminiResponse({
+          prompt: newMsg.content,
+          previousMessages
+        });
+        
+        const botMessage: ChatMessage = { sender: "bot", content: response };
+        setMessages((prev) => [...prev, botMessage]);
+      }
     } catch (err: any) {
       toast({
         variant: "destructive",
@@ -155,6 +163,9 @@ const Chat = () => {
                   <div className="mt-4">
                     <YouTubeRecommendation videos={msg.videos} />
                   </div>
+                )}
+                {msg.sender === "bot" && msg.intentName && (
+                  <IntentChips intents={[msg.intentName]} />
                 )}
               </div>
             </div>
@@ -235,7 +246,7 @@ const Chat = () => {
           </form>
           
           <div className="flex justify-between items-center mt-3 text-xs text-gray-500">
-            <span>Powered by Google Gemini • Type "video" for recommendations</span>
+            <span>Ask me anything about mental well-being</span>
             <div className="flex items-center gap-2">
               {isRecording && (
                 <span className="flex items-center gap-1 text-red-500">

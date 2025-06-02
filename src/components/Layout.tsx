@@ -113,7 +113,7 @@ export function Layout({ children }: LayoutProps) {
       <main className="flex-1 container py-6 bg-blue-50 w-full">{children}</main>
       <footer className="border-t bg-blue-700 py-6">
         <div className="container flex flex-col items-center gap-2 text-center text-sm text-blue-100">
-          <p>© {new Date().getFullYear()} Hopetherapy. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Melvis. All rights reserved.</p>
           <p>Taking care of your mental health, one step at a time.</p>
         </div>
       </footer>
