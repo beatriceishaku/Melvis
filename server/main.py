@@ -1,28 +1,35 @@
 from fastapi import FastAPI, Request, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
 import os
-import requests 
 from dotenv import load_dotenv
 import sqlite3
 from passlib.context import CryptContext
 import jwt
 from datetime import datetime, timedelta
 from intent import get_response, INTENTS, get_intent_and_response  # Import the enhanced intent functionality
-# in server/main.py
 
 load_dotenv() 
 
 app = FastAPI()
 
+# CORS Configuration
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:8080"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+security = HTTPBearer()
 
-
-#jwt
-SECRET_KEY = os.getenv("SECRET_KEY")
+# JWT Configuration
+SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-here")
 JWT_ALGORITHM = "HS256"
-JWT_EXPIRATION_DELTA = timedelta(minutes=30)
+JWT_EXPIRATION_DELTA = timedelta(hours=24)
 
 
 
@@ -50,11 +57,9 @@ class User(BaseModel):
     email: str
     password: str
 
-
 class Token(BaseModel):
     access_token: str
     token_type: str
-
 
 class TokenData(BaseModel):
     email: str = None
@@ -64,18 +69,6 @@ class LoginRequest(BaseModel):
     email: str
     password: str
 
-
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-
-)
-
-
 class PromptRequest(BaseModel):
     prompt: str
     previousMessages: list = []
@@ -83,21 +76,32 @@ class PromptRequest(BaseModel):
 class IntentRequest(BaseModel):
     message: str
 
-
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-GEMINI_ENDPOINT = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
+# Authentication dependency
+def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    try:
+        token = credentials.credentials
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[JWT_ALGORITHM])
+        email: str = payload.get("email")
+        user_id: int = payload.get("id")
+        if email is None or user_id is None:
+            raise HTTPException(status_code=401, detail="Invalid authentication credentials")
+        return {"email": email, "id": user_id}
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
 
 @app.get("/")
 def index():
     return {"Welcome to Melvis"}
 
 @app.post("/api/intent")
-def process_intent(request: IntentRequest):
+def process_intent(request: IntentRequest, current_user: dict = Depends(get_current_user)):
     # Use the enhanced intent detection function
     intent, response = get_intent_and_response(request.message)
     
     if not response:
-        return {"response": "", "intentName": None}
+        return {"response": "I'm not sure how to help with that. Could you try asking something else?", "intentName": "no-response"}
         
     # Return the intent tag and response
     if intent:
@@ -105,60 +109,23 @@ def process_intent(request: IntentRequest):
                 
     return {"response": response, "intentName": "general_response"}
 
-#def chat(request: PromptRequest):
-    #response = get_response(request.prompt)#
-   # if not response:
-        #raise HTTPException(status_code=404, detail="No matching intent found")
-   # return {"response": response}
-
 @app.post("/api/chat")
-def chat(request: PromptRequest):
-    # First try to find a matching intent
+def chat(request: PromptRequest, current_user: dict = Depends(get_current_user)):
+    # Only use intent detection - no Gemini fallback
     intent, intent_response = get_intent_and_response(request.prompt)
     
-    # If we have an intent match, return it immediately
+    # If we have an intent match, return it
     if intent_response:
         return {
             "response": intent_response,
             "intentName": intent.get('tag') if intent else "general_response"
         }
     
-    # Otherwise, fall back to Gemini
-    if not GEMINI_API_KEY:
-        raise HTTPException(status_code=500, detail="Gemini API key not configured")
-
-    headers = {"Content-Type": "application/json"}
-    
-    # Format previous messages for context if provided
-    messages_content = []
-    if request.previousMessages:
-        for msg in request.previousMessages:
-            role = "user" if msg.get("role") == "user" else "model"
-            messages_content.append({
-                "role": role,
-                "parts": [{"text": msg.get("content", "")}]
-            })
-    
-    # Add the current message
-    messages_content.append({
-        "role": "user",
-        "parts": [{"text": request.prompt}]
-    })
-    
-    payload = {
-        "contents": messages_content if messages_content else [{
-            "parts": [{"text": request.prompt}]
-        }]
+    # If no intent matches, return a helpful fallback message
+    return {
+        "response": "I'm not sure how to help with that. You can ask me about movies, greetings, how I'm doing, or other topics I'm familiar with!",
+        "intentName": "no-response"
     }
-
-    try:
-        response = requests.post(GEMINI_ENDPOINT, headers=headers, json=payload)
-        response.raise_for_status()
-        data = response.json()
-        text = data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")
-        return {"response": text or "No response from Gemini model"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/api/signup")
@@ -187,39 +154,42 @@ def login(request: LoginRequest):
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
 
-
-
     cursor.execute("SELECT * FROM users WHERE email = ?", (request.email,))
     user = cursor.fetchone()
     conn.close()
 
     if user is None:
-            raise HTTPException(status_code=404, detail="Invalid Credentials ")
+        raise HTTPException(status_code=401, detail="Invalid credentials")
 
     user_id, fullname, email, password = user
 
     if not pwd_context.verify(request.password, password):
-            raise HTTPException(status_code=404, detail="Invalid Credentials ")
+        raise HTTPException(status_code=401, detail="Invalid credentials")
 
+    # Create token with longer expiration
+    token_data = {"email": email, "id": user_id, "exp": datetime.utcnow() + JWT_EXPIRATION_DELTA}
+    token = jwt.encode(token_data, SECRET_KEY, algorithm=JWT_ALGORITHM)
 
-
-    token = jwt.encode({"email": email, "id": user_id}, SECRET_KEY, algorithm=JWT_ALGORITHM)
-
-
-    return {"access_token": token, "token_type": "bearer"}
-
-
+    return {
+        "access_token": token, 
+        "token_type": "bearer",
+        "user": {"id": user_id, "email": email, "fullname": fullname}
+    }
 
 @app.get("/api/current-user")
-def get_current_user(token:str = Depends(lambda request: request.cookies.get("access_token"))):
-
-    try:
-        decoded_token = jwt.decode(token, SECRET_KEY, algorithms=[JWT_ALGORITHM])
-        return decoded_token
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token expired")
-    except jwt.InvalidTokenError:
-        raise HTTPException(status_code=401, detail="Invalid token")
+def get_current_user_info(current_user: dict = Depends(get_current_user)):
+    # Get user details from database
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, fullname, email FROM users WHERE id = ?", (current_user["id"],))
+    user = cursor.fetchone()
+    conn.close()
+    
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    user_id, fullname, email = user
+    return {"id": user_id, "email": email, "fullname": fullname}
 
 
 

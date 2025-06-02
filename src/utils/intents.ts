@@ -15,21 +15,11 @@ interface ServerIntentResponse {
 // Function to detect intent from user message using server
 export const detectIntent = async (message: string): Promise<ChatMessage & { intentName?: string } | null> => {
   try {
-    const response = await fetch('/api/intent', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message }),
-    });
-
-    if (!response.ok) {
-      // If server intent detection fails, fallback to client-side intents
-      return detectClientIntent(message);
-    }
-
-    const data = await response.json() as ServerIntentResponse;
+    const response = await API.post('/intent', { message });
+    const data = response.data as ServerIntentResponse;
     
     if (!data.response) {
-      return null;
+      return detectClientIntent(message);
     }
 
     return {

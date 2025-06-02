@@ -28,14 +28,14 @@ const Login = () => {
       const data = await login({ email, password });
       toast({
         title: "Login successful!",
-        description: `Welcome back, ${data?.user?.email || "user"}!`,
+        description: `Welcome back, ${data.user.fullname || data.user.email}!`,
       });
       navigate("/home");
-    } catch (error) {
+    } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Login failed",
-        description: "Please check your credentials and try again.",
+        description: error.response?.data?.detail || "Please check your credentials and try again.",
       });
       console.error("Login error:", error);
     } finally {

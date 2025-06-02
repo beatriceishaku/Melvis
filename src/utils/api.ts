@@ -1,35 +1,10 @@
 import axios from 'axios';
 
-export async function fetchGeminiResponse({
-  prompt,
-  previousMessages = []
-}: {
-  prompt: string;
-  previousMessages?: Array<{ role: string; content: string }>;
-}): Promise<string> {
-  const response = await fetch('/api/chat', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ 
-      prompt,
-      previousMessages
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error('Failed to get a response from the chat API');
-  }
-
-  const data = await response.json();
-  return data.response || "Sorry, I couldn't quite get that. Try again?";
-}
-
-
 const API = axios.create({
-  baseURL: ' http://127.0.0.1:8000/api',
+  baseURL: 'http://127.0.0.1:8000/api',
 });
 
-
+// Add authorization header to all requests
 API.interceptors.request.use((config) => {
   const token = localStorage.getItem('token'); 
   if (token) {
@@ -38,23 +13,63 @@ API.interceptors.request.use((config) => {
   return config;
 });
 
-export default API;
+// Handle token expiration
+API.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
 
-interface AuthResponse {
-  token: string;
-  user: any; 
+export async function fetchGeminiResponse({
+  prompt,
+  previousMessages = []
+}: {
+  prompt: string;
+  previousMessages?: Array<{ role: string; content: string }>;
+}): Promise<string> {
+  const response = await API.post('/chat', { 
+    prompt,
+    previousMessages
+  });
+
+  return response.data.response || "Sorry, I couldn't quite get that. Try again?";
 }
 
-export const signup = async (userData: any): Promise<AuthResponse> => {
-  const res = await API.post<AuthResponse>('/signup', userData);
-  const { token } = res.data;
-  localStorage.setItem('token', token);
+interface AuthResponse {
+  access_token: string;
+  token_type: string;
+  user: {
+    id: number;
+    email: string;
+    fullname: string;
+  };
+}
+
+export const signup = async (userData: any): Promise<{ message: string }> => {
+  const res = await API.post('/signup', userData);
   return res.data;
 };
 
 export const login = async (credentials: any): Promise<AuthResponse> => {
   const res = await API.post<AuthResponse>('/login', credentials);
-  const { token } = res.data;
+  const token = res.data.access_token;
   localStorage.setItem('token', token);
   return res.data;
 };
+
+export const getCurrentUser = async () => {
+  const res = await API.get('/current-user');
+  return res.data;
+};
+
+export const logout = () => {
+  localStorage.removeItem('token');
+  window.location.href = '/login';
+};
+
+export default API;

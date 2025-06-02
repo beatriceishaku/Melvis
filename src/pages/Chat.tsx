@@ -41,7 +41,7 @@ const Chat = () => {
     { sender: "bot", content: "Hi! I'm here to help you with your mental health. How are you feeling today?" }
   ]);
   const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [chatLoading, setChatLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
@@ -74,41 +74,47 @@ const Chat = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
+    
     const newMsg: ChatMessage = { sender: "user", content: input.trim() };
     setMessages((prev) => [...prev, newMsg]);
     setInput("");
-    setLoading(true);
+    setChatLoading(true);
 
     try {
-      // First, try to detect intent from the user message
-      const intentResponse = await detectIntent(newMsg.content);
-      
-      if (intentResponse) {
-        // If an intent was detected, use its response
-        setMessages((prev) => [...prev, intentResponse]);
-      } else {
-        // If no intent was detected, use Gemini API for a fallback response
-        const previousMessages = messages.map(msg => ({
+      // Use the authenticated API call that only uses intents
+      const response = await fetchGeminiResponse({
+        prompt: newMsg.content,
+        previousMessages: messages.map(msg => ({
           role: msg.sender === "user" ? "user" : "assistant",
           content: msg.content
-        }));
-        
-        const response = await fetchGeminiResponse({
-          prompt: newMsg.content,
-          previousMessages
-        });
-        
-        const botMessage: ChatMessage = { sender: "bot", content: response };
-        setMessages((prev) => [...prev, botMessage]);
+        }))
+      });
+
+      // Try to detect intent for additional features
+      const intentResult = await detectIntent(newMsg.content);
+      
+      let botMessage: ChatMessage = {
+        sender: "bot",
+        content: response,
+        intentName: intentResult?.intentName
+      };
+
+      // Add video recommendations for certain intents
+      if (intentResult?.intentName === "video_recommendation" || 
+          intentResult?.intentName === "meditation" ||
+          /\b(video|meditation|relax)\b/i.test(newMsg.content)) {
+        botMessage.videos = YOUTUBE_VIDEOS;
       }
+
+      setMessages((prev) => [...prev, botMessage]);
     } catch (err: any) {
       toast({
         variant: "destructive",
         title: "Chatbot error",
-        description: err.message || "Something went wrong. Please try again.",
+        description: err.response?.data?.detail || err.message || "Something went wrong. Please try again.",
       });
     } finally {
-      setLoading(false);
+      setChatLoading(false);
     }
   };
 
@@ -152,7 +158,7 @@ const Chat = () => {
               </div>
             </div>
           ))}
-          {loading && (
+          {chatLoading && (
             <div className="flex justify-start">
               <div className="rounded-xl px-4 py-2 max-w-[80%] bg-blue-200 text-blue-800 animate-pulse">
                 Typing...
@@ -180,7 +186,7 @@ const Chat = () => {
                 placeholder="Share your thoughts or ask me anything..."
                 value={input}
                 onChange={e => setInput(e.target.value)}
-                disabled={loading || isRecording || isProcessing}
+                disabled={chatLoading || isRecording || isProcessing}
               />
               {(isRecording || isProcessing) && (
                 <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
@@ -192,7 +198,7 @@ const Chat = () => {
             <Button
               type="button"
               onClick={handleMicClick}
-              disabled={loading || isProcessing}
+              disabled={chatLoading || isProcessing}
               size="lg"
               className={`rounded-2xl px-6 py-4 transition-all duration-300 hover:scale-105 active:scale-95 ${
                 isRecording 
@@ -205,7 +211,7 @@ const Chat = () => {
             
             <Button 
               type="submit" 
-              disabled={loading || !input.trim() || isRecording || isProcessing}
+              disabled={chatLoading || !input.trim() || isRecording || isProcessing}
               size="lg"
               className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-2xl px-6 py-4 shadow-lg shadow-blue-200 transition-all duration-300 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
             >
