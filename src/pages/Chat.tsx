@@ -7,6 +7,8 @@ import { YouTubeRecommendation } from "@/components/YouTubeRecommendation";
 import { toast } from "@/components/ui/use-toast";
 import { useSpeechToText } from "@/hooks/useSpeechToText";
 import { Mic, MicOff, Square, Send, Sparkles } from "lucide-react";
+import { detectIntent } from "@/utils/intents";
+import { IntentChips } from "@/components/IntentChips";
 
 const YOUTUBE_VIDEOS = [
   {
@@ -41,6 +43,7 @@ const Chat = () => {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const {
     isRecording,
@@ -50,6 +53,15 @@ const Chat = () => {
     stopRecording,
     clearTranscript,
   } = useSpeechToText();
+
+  // Auto-scroll to bottom
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   // Update input when transcript changes
   useEffect(() => {
@@ -134,6 +146,9 @@ const Chat = () => {
                     <YouTubeRecommendation videos={msg.videos} />
                   </div>
                 )}
+                {msg.sender === "bot" && msg.intentName && (
+                  <IntentChips intents={[msg.intentName]} />
+                )}
               </div>
             </div>
           ))}
@@ -151,6 +166,8 @@ const Chat = () => {
               </div>
             </div>
           )}
+          
+          <div ref={messagesEndRef} />
         </div>
 
         {/* Input Form */}
@@ -197,7 +214,7 @@ const Chat = () => {
           </form>
           
           <div className="flex justify-between items-center mt-3 text-xs text-gray-500">
-            <span>Powered by Google Gemini • Type "video" for recommendations</span>
+            <span>Powered by Google Gemini • Intents: mental health, videos, help</span>
             <div className="flex items-center gap-2">
               {isRecording && (
                 <span className="flex items-center gap-1 text-red-500">

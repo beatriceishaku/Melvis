@@ -1,10 +1,48 @@
 import { ChatMessage } from "@/pages/Chat";
+import API from "./api";
 
 export interface Intent {
   name: string;
   patterns: RegExp[];
   handler: (message: string) => Promise<ChatMessage>;
 }
+
+interface ServerIntentResponse {
+  response: string;
+  intentName?: string;
+}
+
+// Function to detect intent from user message using server
+export const detectIntent = async (message: string): Promise<ChatMessage & { intentName?: string } | null> => {
+  try {
+    const response = await fetch('/api/intent', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message }),
+    });
+
+    if (!response.ok) {
+      // If server intent detection fails, fallback to client-side intents
+      return detectClientIntent(message);
+    }
+
+    const data = await response.json() as ServerIntentResponse;
+    
+    if (!data.response) {
+      return null;
+    }
+
+    return {
+      sender: "bot",
+      content: data.response,
+      intentName: data.intentName || "server_intent"
+    };
+  } catch (error) {
+    console.error("Error with server intent detection:", error);
+    // Fallback to client-side intents
+    return detectClientIntent(message);
+  }
+};
 
 // Video recommendations intent
 export const videoIntent: Intent = {
@@ -128,7 +166,7 @@ export const thankYouIntent: Intent = {
 };
 
 // Export all intents
-export const intents: Intent[] = [
+export const clientIntents: Intent[] = [
   videoIntent,
   greetingIntent,
   feelingIntent,
@@ -137,9 +175,9 @@ export const intents: Intent[] = [
   thankYouIntent
 ];
 
-// Function to detect intent from user message
-export const detectIntent = async (message: string): Promise<ChatMessage & { intentName?: string } | null> => {
-  for (const intent of intents) {
+// Client-side intent detection as fallback
+export const detectClientIntent = async (message: string): Promise<ChatMessage & { intentName?: string } | null> => {
+  for (const intent of clientIntents) {
     const matchesIntent = intent.patterns.some(pattern => pattern.test(message));
     if (matchesIntent) {
       const response = await intent.handler(message);

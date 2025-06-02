@@ -8,6 +8,7 @@ import sqlite3
 from passlib.context import CryptContext
 import jwt
 from datetime import datetime, timedelta
+from intent import get_response, INTENTS, get_intent_and_response  # Import the enhanced intent functionality
 # in server/main.py
 
 load_dotenv() 
@@ -77,7 +78,10 @@ app.add_middleware(
 
 class PromptRequest(BaseModel):
     prompt: str
+    previousMessages: list = []
 
+class IntentRequest(BaseModel):
+    message: str
 
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
@@ -87,6 +91,20 @@ GEMINI_ENDPOINT = f"https://generativelanguage.googleapis.com/v1beta/models/gemi
 def index():
     return {"Welcome to Melvis"}
 
+@app.post("/api/intent")
+def process_intent(request: IntentRequest):
+    # Use the enhanced intent detection function
+    intent, response = get_intent_and_response(request.message)
+    
+    if not response:
+        return {"response": "", "intentName": None}
+        
+    # Return the intent tag and response
+    if intent:
+        return {"response": response, "intentName": intent.get('tag', 'unknown')}
+                
+    return {"response": response, "intentName": "general_response"}
+
 #def chat(request: PromptRequest):
     #response = get_response(request.prompt)#
    # if not response:
@@ -95,12 +113,40 @@ def index():
 
 @app.post("/api/chat")
 def chat(request: PromptRequest):
+    # First try to find a matching intent
+    intent, intent_response = get_intent_and_response(request.prompt)
+    
+    # If we have an intent match, return it immediately
+    if intent_response:
+        return {
+            "response": intent_response,
+            "intentName": intent.get('tag') if intent else "general_response"
+        }
+    
+    # Otherwise, fall back to Gemini
     if not GEMINI_API_KEY:
         raise HTTPException(status_code=500, detail="Gemini API key not configured")
 
     headers = {"Content-Type": "application/json"}
+    
+    # Format previous messages for context if provided
+    messages_content = []
+    if request.previousMessages:
+        for msg in request.previousMessages:
+            role = "user" if msg.get("role") == "user" else "model"
+            messages_content.append({
+                "role": role,
+                "parts": [{"text": msg.get("content", "")}]
+            })
+    
+    # Add the current message
+    messages_content.append({
+        "role": "user",
+        "parts": [{"text": request.prompt}]
+    })
+    
     payload = {
-        "contents": [{
+        "contents": messages_content if messages_content else [{
             "parts": [{"text": request.prompt}]
         }]
     }

@@ -2,6 +2,7 @@ import json
 import random
 import re
 from pathlib import Path
+from typing import Dict, List, Optional, Tuple
 
 # Load the intents JSON file
 INTENTS_PATH = Path(__file__).parent / 'intents.json'
@@ -9,6 +10,7 @@ with open(INTENTS_PATH, 'r', encoding='utf-8') as f:
     data = json.load(f)
     INTENTS = data.get('intents', [])
 
+# Compile regex patterns for each intent for faster matching
 for intent in INTENTS:
     intent['patterns_compiled'] = [re.compile(pattern, re.IGNORECASE) for pattern in intent.get('patterns', [])]
 
@@ -26,10 +28,25 @@ def get_response(user_input: str) -> str:
                     return random.choice(responses)
     return ""
 
+
+def get_intent_and_response(user_input: str) -> Tuple[Optional[Dict], str]:
+    """
+    Return both the matched intent and response
+    """
+    for intent in INTENTS:
+        for pattern in intent['patterns_compiled']:
+            if pattern.search(user_input):
+                responses = intent.get('responses', [])
+                if responses:
+                    return intent, random.choice(responses)
+    return None, ""
+
+
 # Load intents.json
 def load_intents(path='intents.json'):
     with open(path, 'r', encoding='utf-8') as f:
         return json.load(f)['intents']
+
 
 # Convert intents to a list of (prompt, response) pairs
 def build_pairs(intents):
@@ -48,12 +65,13 @@ def build_pairs(intents):
                 })
     return pairs
 
-# Write out to JSONL for Hugging Face fine‑tuning
 
+# Write out to JSONL for Hugging Face fine‑tuning
 def write_jsonl(pairs, out_file='training_data.jsonl'):
     with open(out_file, 'w', encoding='utf-8') as f:
         for pair in pairs:
             f.write(json.dumps(pair, ensure_ascii=False) + '\n')
+
 
 # Main execution
 if __name__ == '__main__':
