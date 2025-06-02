@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -7,7 +6,7 @@ import { fetchGeminiResponse } from "@/utils/api";
 import { YouTubeRecommendation } from "@/components/YouTubeRecommendation";
 import { toast } from "@/components/ui/use-toast";
 import { useSpeechToText } from "@/hooks/useSpeechToText";
-import { Mic, MicOff, Square, Send, Sparkles } from "lucide-react";
+import { Mic, MicOff, Square } from "lucide-react";
 
 const YOUTUBE_VIDEOS = [
   {
@@ -40,7 +39,6 @@ const Chat = () => {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const {
     isRecording,
@@ -50,15 +48,6 @@ const Chat = () => {
     stopRecording,
     clearTranscript,
   } = useSpeechToText();
-
-  // Auto-scroll to bottom
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
 
   // Update input when transcript changes
   useEffect(() => {
@@ -119,138 +108,69 @@ const Chat = () => {
 
   return (
     <Layout>
-      <div className="max-w-4xl mx-auto h-[calc(100vh-200px)] flex flex-col bg-white rounded-3xl shadow-2xl overflow-hidden animate-fade-in">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-navy-900 text-white p-6 shadow-lg">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-              <Sparkles className="h-6 w-6" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold">Melvis AI Assistant</h2>
-              <p className="text-blue-100 text-sm">Your personal mental health companion</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Messages Container */}
-        <div className="flex-1 overflow-auto p-6 space-y-6 bg-gradient-to-b from-gray-50 to-white">
+      <div className="max-w-2xl mx-auto w-full bg-blue-50 min-h-[60vh] rounded-2xl shadow-md p-4 md:p-8 mt-4 flex flex-col">
+        <h2 className="text-2xl md:text-3xl font-bold text-blue-800">Melvis AI Chat</h2>
+        <div className="flex-1 overflow-auto space-y-4 pb-4">
           {messages.map((msg, i) => (
-            <div 
-              key={i} 
-              className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"} animate-scale-in`}
-              style={{ animationDelay: `${i * 0.1}s` }}
-            >
+            <div key={i} className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}>
               <div
-                className={`max-w-[80%] rounded-2xl px-6 py-4 shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.02] ${
+                className={`rounded-xl px-4 py-2 max-w-[80%] ${
                   msg.sender === "bot"
-                    ? "bg-white text-gray-800 border border-blue-100"
-                    : "bg-gradient-to-r from-blue-600 to-blue-700 text-white"
+                    ? "bg-blue-200 text-blue-800"
+                    : "bg-blue-700 text-white"
                 }`}
               >
-                <div className="whitespace-pre-wrap leading-relaxed">
-                  {msg.content}
-                </div>
-                {msg.videos && (
-                  <div className="mt-4">
-                    <YouTubeRecommendation videos={msg.videos} />
-                  </div>
-                )}
+                {msg.content}
+                {msg.videos && <YouTubeRecommendation videos={msg.videos} />}
               </div>
             </div>
           ))}
-          
-          {/* Loading indicator */}
           {loading && (
-            <div className="flex justify-start animate-fade-in">
-              <div className="bg-white rounded-2xl px-6 py-4 shadow-lg border border-blue-100">
-                <div className="flex items-center gap-2 text-gray-600">
-                  <div className="flex gap-1">
-                    <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                    <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                  </div>
-                  <span className="text-sm">Thinking...</span>
-                </div>
+            <div className="flex justify-start">
+              <div className="rounded-xl px-4 py-2 max-w-[80%] bg-blue-200 text-blue-800 animate-pulse">
+                Typing...
               </div>
             </div>
           )}
-
-          {/* Processing speech indicator */}
           {isProcessing && (
-            <div className="flex justify-start animate-fade-in">
-              <div className="bg-white rounded-2xl px-6 py-4 shadow-lg border border-blue-100">
-                <div className="flex items-center gap-2 text-gray-600">
-                  <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
-                  <span className="text-sm">Processing speech...</span>
-                </div>
+            <div className="flex justify-start">
+              <div className="rounded-xl px-4 py-2 max-w-[80%] bg-blue-200 text-blue-800 animate-pulse">
+                Processing speech...
               </div>
             </div>
           )}
-          
-          <div ref={messagesEndRef} />
         </div>
-
-        {/* Input Form */}
-        <div className="p-6 bg-white border-t border-gray-100">
-          <form onSubmit={handleSubmit} className="flex gap-3 items-end">
-            <div className="flex-1 relative">
-              <Input
-                ref={inputRef}
-                className="w-full px-6 py-4 text-lg rounded-2xl border-2 border-gray-200 focus:border-blue-400 focus:ring-0 bg-gray-50 transition-all duration-300 pr-16"
-                placeholder="Share your thoughts or ask me anything..."
-                value={input}
-                onChange={e => setInput(e.target.value)}
-                disabled={loading || isRecording || isProcessing}
-              />
-              {(isRecording || isProcessing) && (
-                <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-                  <div className={`w-3 h-3 rounded-full ${isRecording ? 'bg-red-500 animate-pulse' : 'bg-blue-500'}`}></div>
-                </div>
-              )}
-            </div>
-            
-            <Button
-              type="button"
-              onClick={handleMicClick}
-              disabled={loading || isProcessing}
-              size="lg"
-              className={`rounded-2xl px-6 py-4 transition-all duration-300 hover:scale-105 active:scale-95 ${
-                isRecording 
-                  ? "bg-red-500 hover:bg-red-600 shadow-lg shadow-red-200" 
-                  : "bg-gray-600 hover:bg-gray-700 shadow-lg shadow-gray-200"
-              }`}
-            >
-              {isRecording ? <Square className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
-            </Button>
-            
-            <Button 
-              type="submit" 
-              disabled={loading || !input.trim() || isRecording || isProcessing}
-              size="lg"
-              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-2xl px-6 py-4 shadow-lg shadow-blue-200 transition-all duration-300 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
-            >
-              <Send className="h-5 w-5" />
-            </Button>
-          </form>
-          
-          <div className="flex justify-between items-center mt-3 text-xs text-gray-500">
-            <span>Powered by Google Gemini • Type "video" for recommendations</span>
-            <div className="flex items-center gap-2">
-              {isRecording && (
-                <span className="flex items-center gap-1 text-red-500">
-                  <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-                  Recording...
-                </span>
-              )}
-              {isProcessing && (
-                <span className="flex items-center gap-1 text-blue-500">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                  Processing...
-                </span>
-              )}
-            </div>
-          </div>
+        <form onSubmit={handleSubmit} className="mt-4 flex gap-2">
+          <Input
+            ref={inputRef}
+            className="bg-white/80 border-blue-200 flex-1"
+            placeholder="Type your message or use the microphone..."
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            disabled={loading || isRecording || isProcessing}
+          />
+          <Button
+            type="button"
+            onClick={handleMicClick}
+            disabled={loading || isProcessing}
+            className={`${
+              isRecording 
+                ? "bg-red-600 hover:bg-red-700" 
+                : "bg-blue-600 hover:bg-blue-700"
+            } text-white`}
+          >
+            {isRecording ? <Square className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+          </Button>
+          <Button type="submit" disabled={loading || !input.trim() || isRecording || isProcessing} className="bg-blue-700 hover:bg-blue-800 text-white">
+            Send
+          </Button>
+        </form>
+        <div className="text-xs text-blue-600 mt-1 flex justify-between">
+          <span>Powered by Google Gemini&nbsp;|&nbsp;Type "video" for recommendations</span>
+          <span>
+            {isRecording && "🎤 Recording..."}
+            {isProcessing && "⏳ Processing..."}
+          </span>
         </div>
       </div>
     </Layout>
