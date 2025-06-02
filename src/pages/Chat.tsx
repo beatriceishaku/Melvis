@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -8,8 +7,6 @@ import { YouTubeRecommendation } from "@/components/YouTubeRecommendation";
 import { toast } from "@/components/ui/use-toast";
 import { useSpeechToText } from "@/hooks/useSpeechToText";
 import { Mic, MicOff, Square, Send, Sparkles } from "lucide-react";
-import { detectIntent } from "@/utils/intents";
-import { IntentChips } from "@/components/IntentChips";
 
 const YOUTUBE_VIDEOS = [
   {
@@ -44,7 +41,6 @@ const Chat = () => {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const {
     isRecording,
@@ -54,15 +50,6 @@ const Chat = () => {
     stopRecording,
     clearTranscript,
   } = useSpeechToText();
-
-  // Auto-scroll to bottom
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
 
   // Update input when transcript changes
   useEffect(() => {
@@ -127,33 +114,16 @@ const Chat = () => {
 
   return (
     <Layout>
-      <div className="max-w-4xl mx-auto h-[calc(100vh-200px)] flex flex-col bg-white rounded-3xl shadow-2xl overflow-hidden animate-fade-in">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-navy-900 text-white p-6 shadow-lg">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-              <Sparkles className="h-6 w-6" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold">Melvis AI Assistant</h2>
-              <p className="text-blue-100 text-sm">Your personal mental health companion</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Messages Container */}
-        <div className="flex-1 overflow-auto p-6 space-y-6 bg-gradient-to-b from-gray-50 to-white">
+      <div className="max-w-2xl mx-auto w-full bg-blue-50 min-h-[60vh] rounded-2xl shadow-md p-4 md:p-8 mt-4 flex flex-col">
+        <h2 className="text-2xl md:text-3xl font-bold text-blue-800">Melvis AI Chat</h2>
+        <div className="flex-1 overflow-auto space-y-4 pb-4">
           {messages.map((msg, i) => (
-            <div 
-              key={i} 
-              className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"} animate-scale-in`}
-              style={{ animationDelay: `${i * 0.1}s` }}
-            >
+            <div key={i} className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}>
               <div
-                className={`max-w-[80%] rounded-2xl px-6 py-4 shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.02] ${
+                className={`rounded-xl px-4 py-2 max-w-[80%] ${
                   msg.sender === "bot"
-                    ? "bg-white text-gray-800 border border-blue-100"
-                    : "bg-gradient-to-r from-blue-600 to-blue-700 text-white"
+                    ? "bg-blue-200 text-blue-800"
+                    : "bg-blue-700 text-white"
                 }`}
               >
                 <div className="whitespace-pre-wrap leading-relaxed">
@@ -164,42 +134,23 @@ const Chat = () => {
                     <YouTubeRecommendation videos={msg.videos} />
                   </div>
                 )}
-                {msg.sender === "bot" && msg.intentName && (
-                  <IntentChips intents={[msg.intentName]} />
-                )}
               </div>
             </div>
           ))}
-          
-          {/* Loading indicator */}
           {loading && (
-            <div className="flex justify-start animate-fade-in">
-              <div className="bg-white rounded-2xl px-6 py-4 shadow-lg border border-blue-100">
-                <div className="flex items-center gap-2 text-gray-600">
-                  <div className="flex gap-1">
-                    <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                    <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                  </div>
-                  <span className="text-sm">Thinking...</span>
-                </div>
+            <div className="flex justify-start">
+              <div className="rounded-xl px-4 py-2 max-w-[80%] bg-blue-200 text-blue-800 animate-pulse">
+                Typing...
               </div>
             </div>
           )}
-
-          {/* Processing speech indicator */}
           {isProcessing && (
-            <div className="flex justify-start animate-fade-in">
-              <div className="bg-white rounded-2xl px-6 py-4 shadow-lg border border-blue-100">
-                <div className="flex items-center gap-2 text-gray-600">
-                  <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
-                  <span className="text-sm">Processing speech...</span>
-                </div>
+            <div className="flex justify-start">
+              <div className="rounded-xl px-4 py-2 max-w-[80%] bg-blue-200 text-blue-800 animate-pulse">
+                Processing speech...
               </div>
             </div>
           )}
-          
-          <div ref={messagesEndRef} />
         </div>
 
         {/* Input Form */}
@@ -246,7 +197,7 @@ const Chat = () => {
           </form>
           
           <div className="flex justify-between items-center mt-3 text-xs text-gray-500">
-            <span>Ask me anything about mental well-being</span>
+            <span>Powered by Google Gemini • Type "video" for recommendations</span>
             <div className="flex items-center gap-2">
               {isRecording && (
                 <span className="flex items-center gap-1 text-red-500">
