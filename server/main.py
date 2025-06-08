@@ -17,7 +17,7 @@ app = FastAPI()
 # CORS Configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8080"],
+    allow_origins=["https://melvis.vercel.app"], #  Added your frontend domain here
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
