@@ -3,27 +3,15 @@ import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
   NavigationMenuLink,
   NavigationMenuList,
-  NavigationMenuTrigger,
+  NavigationMenuItem,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Menu, LogOut, User } from "lucide-react";
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { getCurrentUser, logout } from "@/utils/api";
+import { Menu } from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { getCurrentUser } from "@/utils/api"; // Import getCurrentUser
 
 type LayoutProps = {
   children: React.ReactNode;
@@ -32,32 +20,21 @@ type LayoutProps = {
 export function Layout({ children }: LayoutProps) {
   const location = useLocation();
   const isMobile = useIsMobile();
-  const [user, setUser] = useState<any>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userName, setUserName] = useState<string | null>(null); // State to hold the user's name
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const token = localStorage.getItem('token');
-      if (token) {
-        try {
-          const userData = await getCurrentUser();
-          setUser(userData);
-          setIsAuthenticated(true);
-        } catch (error) {
-          console.error('Auth check failed:', error);
-          setIsAuthenticated(false);
-        }
+    const fetchUserName = async () => {
+      try {
+        const user = await getCurrentUser();
+        setUserName(user.fullname); // Assuming the user object has a 'fullname' field
+      } catch (error) {
+        console.error("Failed to fetch user name:", error);
+        // Handle error, e.g., redirect to login or show a message
       }
     };
 
-    checkAuth();
-  }, []);
-
-  const handleLogout = () => {
-    logout();
-    setUser(null);
-    setIsAuthenticated(false);
-  };
+    fetchUserName();
+  }, []); // Empty dependency array means this effect runs once on mount
 
   const navItems = [
     { name: "Home", path: "/home" },
@@ -91,16 +68,12 @@ export function Layout({ children }: LayoutProps) {
               {item.name}
             </Link>
           ))}
-          {isAuthenticated && (
-            <Button
-              onClick={handleLogout}
-              variant="ghost"
-              className="p-2 mt-4 rounded-md hover:bg-blue-200 justify-start"
-            >
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
-            </Button>
-          )}
+          <Link
+            to="/login"
+            className="p-2 mt-4 rounded-md hover:bg-blue-200"
+          >
+            Logout
+          </Link>
         </div>
       </SheetContent>
     </Sheet>
@@ -139,24 +112,18 @@ export function Layout({ children }: LayoutProps) {
           </div>
           <div className="flex items-center gap-4">
             {isMobile ? <MobileNavigation /> : <DesktopNavigation />}
-            {isAuthenticated && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="text-white hover:bg-white/10">
-                    <User className="h-4 w-4 mr-2" />
-                    {user?.fullname || user?.email || 'User'}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={handleLogout}>
-                    <LogOut className="h-4 w-4 mr-2" />
-                    Logout
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+            {/* Display user's name before the Logout button */}
+            {!isMobile && userName && (
+              <span className="text-white text-lg font-medium">
+                Hello, {userName}!
+              </span>
             )}
             {!isMobile && (
-              <Button variant="outline" asChild className="border-white text-white hover:bg-blue-800 hover:text-white">
+              <Button
+                variant="outline"
+                asChild
+                className="border-white bg-white hover:bg-blue-800 hover:text-white text-black"
+              >
                 <Link to="/login">Logout</Link>
               </Button>
             )}
@@ -166,7 +133,7 @@ export function Layout({ children }: LayoutProps) {
       <main className="flex-1 container py-6 bg-blue-50 w-full">{children}</main>
       <footer className="border-t bg-blue-700 py-6">
         <div className="container flex flex-col items-center gap-2 text-center text-sm text-blue-100">
-          <p>© {new Date().getFullYear()} Melvis. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Hopetherapy. All rights reserved.</p>
           <p>Taking care of your mental health, one step at a time.</p>
         </div>
       </footer>
