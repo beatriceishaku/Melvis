@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/use-toast";
-import { login } from "../utils/api"; // Make sure it's a named export or adjust accordingly
+import { login } from "../utils/api";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -28,7 +29,7 @@ const Login = () => {
       const data = await login({ email, password });
       toast({
         title: "Login successful!",
-        description: `Welcome back, ${data.user.fullname || data.user.email}!`,
+        description: `Welcome back, ${data.fullname || data.email || email}!`,
       });
       navigate("/home");
     } catch (error: any) {
