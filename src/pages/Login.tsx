@@ -1,4 +1,5 @@
 
+
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -29,7 +30,7 @@ const Login = () => {
       const data = await login({ email, password });
       toast({
         title: "Login successful!",
-        description: `Welcome back, ${data.fullname || data.email || email}!`,
+        description: `Welcome back!`,
       });
       navigate("/home");
     } catch (error: any) {
@@ -110,3 +111,4 @@ const Login = () => {
 };
 
 export default Login;
+
