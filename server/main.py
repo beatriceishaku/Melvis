@@ -131,7 +131,7 @@ class ChatSession(BaseModel):
 origins = [
     "http://localhost:8080",
     "https://melvis-ai.vercel.app",
-    "https://ominous-fiesta-6j454769w4q3xrvj-8000.app.github.dev",
+    "https://melvis.onrender.com",
     "https://ominous-fiesta-6j454769w4q3xrvj-8080.app.github.dev"
 
 ]
