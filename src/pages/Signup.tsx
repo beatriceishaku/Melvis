@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -5,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/use-toast";
-import axios from "axios";
+import { signup } from "../utils/api";
 
 const Signup = () => {
   const [fullname, setFullname] = useState("");
@@ -30,22 +31,23 @@ const Signup = () => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post("http://127.0.0.1:8000/api/signup", {
+      const data = await signup({
         fullname,
         email,
         password,
       });
 
-      const { token, message } = response.data;
+      console.log("Signup successful:", data);
 
       toast({
         title: "Account created!",
-        description: message || "Welcome to MindfulMe.",
+        description: "Welcome to Melvis! Please login to continue.",
       });
 
-      localStorage.setItem("token", token);
-      navigate("/home");
+      // Redirect to login page after successful signup
+      navigate("/login");
     } catch (error: any) {
+      console.error("Signup error:", error);
       toast({
         variant: "destructive",
         title: "Signup failed",
@@ -64,7 +66,7 @@ const Signup = () => {
             Create an Account
           </CardTitle>
           <CardDescription className="text-center">
-            Enter your information to create your MindfulMe account
+            Enter your information to create your Melvis account
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

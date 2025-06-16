@@ -1,7 +1,8 @@
+
 import axios from 'axios';
 
 const API = axios.create({
-  baseURL: 'http://localhost:8000/api',
+  baseURL: 'http://127.0.0.1:8000/api',
 });
 
 API.interceptors.request.use((config) => {
@@ -83,8 +84,8 @@ export const signup = async (userData: {
   fullname: string;
   email: string;
   password: string;
-}): Promise<AuthResponse> => {
-  const res = await API.post<AuthResponse>('/signup', userData);
+}): Promise<{ message: string }> => {
+  const res = await API.post('/signup', userData);
   return res.data;
 };
 

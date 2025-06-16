@@ -1,5 +1,4 @@
 
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -28,18 +27,19 @@ const Login = () => {
 
     try {
       const data = await login({ email, password });
+      console.log("Login successful:", data);
       toast({
         title: "Login successful!",
-        description: `Welcome back!`,
+        description: "Welcome back!",
       });
       navigate("/home");
     } catch (error: any) {
+      console.error("Login error:", error);
       toast({
         variant: "destructive",
         title: "Login failed",
         description: error.response?.data?.detail || "Please check your credentials and try again.",
       });
-      console.error("Login error:", error);
     } finally {
       setIsLoading(false);
     }
@@ -53,7 +53,7 @@ const Login = () => {
             Welcome Back
           </CardTitle>
           <CardDescription className="text-center">
-            Enter your username and password to access your account
+            Enter your email and password to access your account
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -63,8 +63,8 @@ const Login = () => {
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
-                  placeholder="email"
-                  type="text"
+                  placeholder="email@example.com"
+                  type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -111,4 +111,3 @@ const Login = () => {
 };
 
 export default Login;
-
