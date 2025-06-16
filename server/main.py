@@ -131,6 +131,8 @@ class ChatSession(BaseModel):
 origins = [
     "http://localhost:8080",
     "https://melvis-ai.vercel.app",
+    "https://ominous-fiesta-6j454769w4q3xrvj-8000.app.github.dev",
+    "https://ominous-fiesta-6j454769w4q3xrvj-8080.app.github.dev"
 
 ]
 
@@ -187,7 +189,7 @@ def get_session_context(session_id: str, limit: int = 10) -> str:
 def index():
     return {"message": "Welcome to Melvis - Your Mental Health AI Assistant"}
 
-@app.post("/api/chat")
+@app.post("/chat")
 def chat(request: PromptRequest, current_user: dict = Depends(get_current_user)):
     if not GEMINI_API_KEY:
         raise HTTPException(status_code=500, detail="Gemini API key not configured")
@@ -262,7 +264,7 @@ def chat(request: PromptRequest, current_user: dict = Depends(get_current_user))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generating response: {str(e)}")
 
-@app.post("/api/sessions")
+@app.post("/sessions")
 def create_session(session_data: SessionCreate, current_user: dict = Depends(get_current_user)):
     user_id = current_user["id"]
     session_id = str(uuid.uuid4())
@@ -278,7 +280,7 @@ def create_session(session_data: SessionCreate, current_user: dict = Depends(get
     
     return {"session_id": session_id, "title": session_data.title}
 
-@app.get("/api/sessions")
+@app.get("/sessions")
 def get_user_sessions(current_user: dict = Depends(get_current_user)):
     user_id = current_user["id"]
     
@@ -303,7 +305,7 @@ def get_user_sessions(current_user: dict = Depends(get_current_user)):
         for session in sessions
     ]
 
-@app.get("/api/sessions/{session_id}")
+@app.get("/sessions/{session_id}")
 def get_session_messages(session_id: str, current_user: dict = Depends(get_current_user)):
     user_id = current_user["id"]
     
@@ -340,7 +342,7 @@ def get_session_messages(session_id: str, current_user: dict = Depends(get_curre
         for msg in messages
     ]
 
-@app.delete("/api/sessions/{session_id}")
+@app.delete("/sessions/{session_id}")
 def delete_session(session_id: str, current_user: dict = Depends(get_current_user)):
     user_id = current_user["id"]
     
@@ -367,7 +369,7 @@ def delete_session(session_id: str, current_user: dict = Depends(get_current_use
     
     return {"message": "Session deleted successfully"}
 
-@app.post("/api/signup")
+@app.post("/signup")
 def signup(user: User):
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
@@ -385,7 +387,7 @@ def signup(user: User):
 
     return {"message": "User created successfully"}
 
-@app.post("/api/login")
+@app.post("/login")
 def login(request: LoginRequest):
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
@@ -406,7 +408,7 @@ def login(request: LoginRequest):
 
     return {"access_token": token, "token_type": "bearer"}
 
-@app.get("/api/current-user")
+@app.get("/current-user")
 def get_current_user_info(current_user: dict = Depends(get_current_user)):
     user_id = current_user["id"]
 

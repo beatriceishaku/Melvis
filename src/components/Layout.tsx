@@ -122,7 +122,7 @@ export function Layout({ children }: LayoutProps) {
               <Button
                 variant="outline"
                 asChild
-                className="border-white bg-white hover:bg-blue-800 hover:text-white text-black"
+                className="border-white bg-blue hover:bg-blue-800 hover:text-white text-black"
               >
                 <Link to="/login">Logout</Link>
               </Button>

@@ -2,7 +2,8 @@
 import axios from 'axios';
 
 const API = axios.create({
-  baseURL: 'http://127.0.0.1:8000/api',
+  baseURL: 'https://ominous-fiesta-6j454769w4q3xrvj-8000.app.github.dev',
+   
 });
 
 API.interceptors.request.use((config) => {
