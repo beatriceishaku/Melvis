@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 const API = axios.create({
-  baseURL: 'http://melvis-2.onrender.com',
+  baseURL: 'https://melvis-2.onrender.com',
    
 });
 
