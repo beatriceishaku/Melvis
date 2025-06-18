@@ -307,9 +307,9 @@ const Chat = () => {
 
   return (
     <Layout>
-      <div className="max-w-6xl mx-auto w-full flex gap-4 mt-4">
+     <div className="max-w-6xl mx-auto w-full flex flex-col md:flex-row gap-4 mt-4 px-2">
         {/* Sessions Sidebar */}
-        <div className={`${showSessions ? 'w-80' : 'w-12'} transition-all duration-300 bg-white rounded-2xl shadow-md flex flex-col`}>
+        <div className={`${showSessions ? 'w-full md:w-80' : 'w-12'} transition-all duration-300 bg-white rounded-2xl shadow-md flex flex-col`}>
           <div className="p-4 border-b">
             <Button
               onClick={() => setShowSessions(!showSessions)}
@@ -379,7 +379,7 @@ const Chat = () => {
         </div>
 
         {/* Main Chat Area */}
-        <div className="flex-1 bg-blue-50 min-h-[60vh] rounded-2xl shadow-md p-4 md:p-8 flex flex-col">
+        <div className="flex-1 bg-blue-50 min-h-[60vh] rounded-2xl shadow-md p-4 md:p-8 flex flex-col w-full">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl md:text-3xl font-bold text-blue-800">Melvis AI Chat</h2>
             <div className="text-sm text-blue-600">
