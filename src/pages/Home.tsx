@@ -5,6 +5,9 @@ import { Link } from "react-router-dom";
 import React from "react";
 import { motion } from "framer-motion";
 import heroImg from "@/assets/hero.png";
+import { DisclaimerConsent } from "@/components/DisclaimerConsent";
+import { useUserConsent } from "@/hooks/useUserConsent";
+import { toast } from "@/components/ui/use-toast";
 
 const cardData = [
   {
@@ -36,6 +39,40 @@ const cardData = [
 
 
 const Home = () => {
+  const { hasAccepted, loading, saveConsent } = useUserConsent();
+
+  const handleConsentAccept = async () => {
+    const success = await saveConsent(true);
+    if (success) {
+      toast({
+        title: "Welcome to Melvis!",
+        description: "You can now access all features. Remember, we're here to support you.",
+        duration: 5000,
+      });
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to save consent. Please try again.",
+      });
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-blue-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!hasAccepted) {
+    return <DisclaimerConsent onAccept={handleConsentAccept} />;
+  }
+
   return (
     <Layout>
       <div className="space-y-8">
