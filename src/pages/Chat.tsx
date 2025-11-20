@@ -7,9 +7,6 @@ import { fetchGeminiResponse, getSessions, getSessionMessages, createSession, de
 import { YouTubeRecommendation } from "@/components/YouTubeRecommendation";
 import { toast } from "@/components/ui/use-toast";
 import { Mic, MicOff, Plus, MessageSquare, Trash2, History } from "lucide-react";
-import { CrisisAlert } from "@/components/CrisisAlert";
-import { useEmergencyResources } from "@/hooks/useEmergencyResources";
-import { supabase } from "@/integrations/supabase/client";
 
 const YOUTUBE_VIDEOS = [
   {
@@ -50,14 +47,9 @@ const Chat = () => {
   const [loading, setLoading] = useState(false);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
-  const [showSessions, setShowSessions] = useState(true);
+  const [showSessions, setShowSessions] = useState(true); // Changed to true
   const [isListening, setIsListening] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);
-  const [crisisDetected, setCrisisDetected] = useState<{
-    severity: 'medium' | 'high' | 'critical';
-    show: boolean;
-  } | null>(null);
-  const { resources } = useEmergencyResources();
   const inputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -217,32 +209,6 @@ const Chat = () => {
     setMessages((prev) => [...prev, newMsg]);
     setInput("");
     setLoading(true);
-
-    // Crisis Detection
-    try {
-      const { data: detectionData } = await supabase.functions.invoke('detect-crisis', {
-        body: { 
-          message: newMsg.content,
-          sessionId: currentSessionId
-        }
-      });
-
-      if (detectionData?.isCrisis && detectionData.severity !== 'low') {
-        setCrisisDetected({
-          severity: detectionData.severity as 'medium' | 'high' | 'critical',
-          show: true
-        });
-        
-        // Show toast notification
-        toast({
-          title: "Support Resources Available",
-          description: "We've detected you might need some support. Please check the resources displayed.",
-          duration: 5000,
-        });
-      }
-    } catch (error) {
-      console.error('Crisis detection error:', error);
-    }
 
     // Check for video trigger
     if (containsVideoTrigger(newMsg.content)) {
@@ -422,17 +388,6 @@ const Chat = () => {
           </div>
           
           <div className="flex-1 overflow-auto space-y-4 pb-4 max-h-[500px]">
-            {/* Crisis Alert */}
-            {crisisDetected?.show && resources.length > 0 && (
-              <div className="mb-4">
-                <CrisisAlert
-                  severity={crisisDetected.severity}
-                  resources={resources}
-                  onClose={() => setCrisisDetected(null)}
-                />
-              </div>
-            )}
-
             {messages.map((msg, i) => (
               <div key={i} className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}>
                 <div

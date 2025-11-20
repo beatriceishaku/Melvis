@@ -1,4 +1,1 @@
 project_id = "hasbvidwxwbdsiqqrwzf"
-
-[functions.detect-crisis]
-verify_jwt = false
