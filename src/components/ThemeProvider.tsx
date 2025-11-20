@@ -1,4 +1,3 @@
-
 import React from "react";
 
 type ThemeProviderProps = {
@@ -6,5 +5,5 @@ type ThemeProviderProps = {
 };
 
 export function ThemeProvider({ children }: ThemeProviderProps) {
-  return <div className="min-h-screen bg-blue-50">{children}</div>;
+  return <>{children}</>;
 }
